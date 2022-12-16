@@ -1,0 +1,237 @@
+---
+title: "Twins Project"
+author: "Christopher Boatto"
+date: "18/11/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+# The following project was completed to determine the likelihood of a stolen base per attempt given a number of metrics. Stolen bases have become a dying art within the MLB. Most teams now rely on high slugging, high on base guys rather than guys who can run. A team that can determine when it is the best time to steal a base can take advantage at gaining an extra base thus increasing their chance to win. I chose to use a Random Forest model as it creates a ‘forest’ of decision trees where the output is the class selecting the most trees. This is done to remove bias within the data and gain the ideal output. Random Forest is one of the strongest predictive models that one can create and given the amount of data within the data set, I deemed it too great for that of a single decsion tree to handle.
+
+# To download the data set I first uploaded it into a table from the websites that contained the data. I then wrote the tables into a .csv file into my Documents folder to keep the data location consistent if needed in a subsequent time in the future. I then reloaded the data sets into R from my Documents and commented out the url’s.
+
+
+```{r}
+#url1 <- 'https://vidcruiter-paperclip-bucket-production-us.s3.amazonaws.com/fields/attachments/003/901/208/original/StealPlayMetrics.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5AKRL2FQECFTACLT%2F20211118%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20211118T180827Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEAoaCXVzLWVhc3QtMSJHMEUCIQDzh7E4vK4Z6uwKnTiufIn%2FvlhLX3JcsOYMZeNTr9AwGAIgXd9rGQju8seKJHr849VovzgSSK5gLkutJlWhMUhVMjQqgwQIw%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARADGgw4OTQwNjA3MTIyODgiDIrPxL1LgCg1BltCtyrXA%2B4VTyEJh1OBXtcHuRVWXKDFNXMHK%2Bt89n9DYlJ%2FdKrP4Wek%2BBzMo9PeHAGnwz5BgLbmbUucyCeYbyhtL0BEbKl24xs0bvGQu22te%2FEoqsUysK%2B69taGu%2FPndz1SAMq7rxWlC8uxUfl4%2F%2FzHL4O6zTOAA%2FNb7j9m1VpFaA4xLfHQBVHxSAnbwWsDF2nTQCS9%2BEZJ%2BSNdH5D542Qx1mUFoyywWq5VIQGylGhu%2B3PiFowvCYN%2BZE2T87o6SMtg%2FkE4Crafgx2RAIm8mZTzDd8HTS%2F4Zr0OPyKKf1u1DKhy6FqWdIhW1CXhI3LNFboGnRtNT6bvtqRpV6lq3qFtSLGzG9nwrtLIMfqhcTHWhc9S6JkvOJleUMDFehR6C9ml%2Fq8%2FmyD3WBlMzy3WDgvwlqpST%2BzlugrbspBD2%2FOmBq8LOek%2FOzyWOXt%2FmFLI826W3ZYwUWTui%2FRO13Jy2F%2B%2FuVbGJnnM2w6zf3%2BYVJRd5m5%2BJq8QeYdXqxR%2F4R89y0JLhygMvt0Nl7ZBTZvUVWtzqAJc3MSYpwGZoQsczchm%2FATYL%2BrREW983fhl0uySXGPR8tGU6mJirZ%2FE4QCDa3DVIL6EQ5PA21o1N9J1b6%2BISGJvcsYylx88nAgVljDtoNqMBjqlAWiDD99jWEtvuSHrpjJz23%2FRiCeOmGx9iMIyOUhhcfYX1aG9bkzY4nRoPDZYJ5Vcmlbp2a%2BadpdvNTmvE%2B84rOWOVYnS1Cfd3iVH3KrtufMRPly0GOajqRiNfq67M%2Bq%2BTUwmMSmr4n5ncI8sAHPmjOdHEvkMo5Do%2FszuerscssKteIoQ4pQIZYQzfjgVmwW%2FwvXXGEkkBTS9QhgVrlpEkBMwZP1pbQ%3D%3D&X-Amz-Signature=dcc19892e6129a157d4a580e56f945905ddb9f23a80d5d171037eb888a3a6303'
+
+#url2 <- 'https://vidcruiter-paperclip-bucket-production-us.s3.amazonaws.com/fields/attachments/003/926/717/original/StealContext.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5AKRL2FQPM65VDNL%2F20211118%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20211118T181116Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEAoaCXVzLWVhc3QtMSJIMEYCIQCtcKEgZ5Bn76AsBF2Q7kXQKSrTyU%2FuVa9ZhrNer0Rn%2FgIhAPEqSGWnbOTvqcjR%2Fd8lqeecDqu%2BHy60V85W%2BjmXbP2QKoMECMP%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMODk0MDYwNzEyMjg4IgwGLR08Df%2F1H0uKa7oq1wPSHuy7W1uPvxim4KhIq%2BC3TSMI9DHlyQv73sZU4DJ1bjaE3i9rd5BcuUphaxLrWyGoCowILRU28VQR4bbU9yFq6nDPJjvRC2d82pA38uG1Kkf359%2Fvg4YyxtbFgNsY86PZxiS1FnAaKyU4PaNP7cs0WXn03JCpDUzne1nWfj%2FzW9dLO6kOAlCjmmy8unKrtEUKvZOSOzcfuysRZXbIZKN5wuAsGgdoivRf12vK%2Byi0ti4uqyyhk8%2BOV5K8J0Tpo1AwCMmaa7QQUnn%2BfgTPFl4x15aJrk%2BGn2fcBsepOaHECoY%2Bna2AuY81%2BImujrBoceRDUT40iv0LTrdDqU1JKtrTfJp6TIc%2F1Ho8JHKSaZK6z08SqnFGcQjaH%2B8%2BgtcqhOBPUF9EXjk1d45CUEFKiWvbJUcUcL4IW3I9law0fAGMBsEWrYhZ0xeaOPaXCuQH%2BIXHUGinE%2F9xaM4kwi4qp9UdOBKViImitSREYC513HpTR12F50PFiXSIKanhFWskTkW20FjK%2BHXOAwmIMydqzFW1wLBAzQTh2DY1d%2FAnaFJfPjJQg2UIHn6GPpug0kHUhuzYx9k5bFlhTspQgbVd8sW44nXJPr9PpP4kG2HMkSbFawJLUr6gH4swraPajAY6pAHmjAU5IgzTcUb4gca4lNmsBzguDg%2FxAAh73A3r%2FrAH7Oc3VZ1ZraB7xHzUBf22SvI0X1H7od6fmKDKYIsBjs0bf3pp%2BwoV%2Bq5qJjerWkjUuy3FjlrcadHXlK4Q9cOr1GWDyVxM4fHTvLDs8kqdKQF10nuv5D6KbYqAVZQZsBgRJhvM97YR4yORWyR8Q1hohvI1%2B14As1Hys1bf62XQNh1hSNYnHw%3D%3D&X-Amz-Signature=971d728ec10cbb19685ad4cd674633552958a1056e42e5696c59d160b85d8f95'
+```
+
+```{r}
+#StealPlyMetrics <- read.csv(url1)
+#StealContext <- read.csv(url2)
+```
+
+```{r}
+#write.csv(StealPlyMetrics, 'C:/Users/cboat/OneDrive/Documents/StealPlyMetrics.csv', row.names = FALSE)
+#write.csv(StealContext, 'C:/Users/cboat/OneDrive/Documents/StealContext.csv', row.names = FALSE)
+```
+
+```{r}
+StealPlayMetrics <- read.csv(file.choose())
+StealContext <- read.csv(file.choose())
+```
+
+# Below are the packages I used to create this model.
+
+```{r}
+require(dplyr)
+require(ggplot2)
+require(corrplot)
+require(caret)
+require(stringr)
+require(randomForest)
+require(ROCR)
+require(pROC)
+```
+
+# I joined both datasets using the full_join function on the 'PlayGuid' attribute. This method allowed me to keep the maximum number of records possible while matching both datasets together. I then checked the summary and structure to gain a better understanding of the data. I noticed that there were a lot of NA values within the data set. This required me to deal with the NA values in a creative matter. 
+
+```{r}
+Steals1 <- full_join(StealContext, StealPlayMetrics, by = "PlayGuid", copy = FALSE, suffix = c('.x', '.y'))
+```
+
+```{r}
+str(Steals1)
+```
+```{r}
+summary(Steals1)
+```
+
+```{r}
+sum(is.na(Steals1))
+```
+
+# Next, I cleaned the data to deal with the NA values in the dataset. I first used the attributes that stated what base the RunnerID’s started on to update as many NA’s possible in the RunnerID attribute. The runner is important when determining the stolen base as each player is different in their speeds, jumps and leads. I then changed the attributes that stated what base the RunnerID’s started on to binary terms where an NA value is a 0 meaning no one was on that base and a RunnerID being present to a 1 because someone was on that base. The base in which a runner starts is important because the situation in which the player attempts a steal can have a factor on the outcome. Some times catchers do not throw to seccond base when there is a runner on first and third because he does not want the runner from third to score. This allows the runner on first to take second base without a throw resulting in a stolen base.
+
+# I then set the NA values to the mean of the columns for Pop_Time, Secondary_Lead_Distance, Lead_Distance, PickOff_Steal_Exchange, Plate_Time_y0, Plate_Time_y17. These columns were numeric metrics that were not identifiers much like RunnerID, CatcherID, and PitcherID. This allowed me to keep all the records while not changing the Interquartile Ranges of the metrics. This is a key component as it allows for the data to not be significantly altered keeping the ability to model the data without bias.
+
+# Next, removed the PitcherID and CatcherID columns as even though the columns are numeric, the numbers are identifiers of a player therefore I cannot set the NA values to the mean of the column. also, there were too many NA values within the columns to remove the records all together as it would have cut the dataset in half. I deemed it prudent to remove the columns as the Pop_Time and Pickoff columns were enough of an indicator for the catcher’s and pitcher’s abilities to remove the CatcherID and PitcherID columns.
+
+# Lastly, I removed the remainder of the NA values as at this point there were very few. The NA values were found in the Advance and Thrown_Out columns. These two are the binary results columns therefore cannot be altered if showing NA values. Either the result occurred, or it did not, there is no mean to this attribute that I can use to alter the NA values. I then moved columns around to set up my charts later in the assignment. I used the summary above to remove the outliers within the three columns; Plate_Time_y0, Lead_Distance and Secondary_Lead_Distance. Outliers can skew the data so in order for me to have an accurate model, some outliers must be removed.
+
+```{r}
+Steals1 <- mutate(Steals1, RunnerId = coalesce(RunnerId, StartRunnerOnFirstId), RunnerId = coalesce(RunnerId, StartRunnerOnSecondId), RunnerId = coalesce(RunnerId, StartRunnerOnThirdId), StartRunnerOnFirstId = case_when(StartRunnerOnFirstId != 'NA' ~ 1), StartRunnerOnSecondId = case_when(StartRunnerOnSecondId != 'NA' ~ 1), StartRunnerOnThirdId = case_when(StartRunnerOnThirdId != 'NA' ~ 1), Lead_Distance = if_else(is.na(Lead_Distance), mean(Lead_Distance, na.rm = TRUE), Lead_Distance), Secondary_Lead_Distance = if_else(is.na(Secondary_Lead_Distance), mean(Secondary_Lead_Distance, na.rm = TRUE), Secondary_Lead_Distance), Pop_Time = if_else(is.na(Pop_Time), mean(Pop_Time, na.rm = TRUE), Pop_Time), PickOff_Steal_Exchange = if_else(is.na(PickOff_Steal_Exchange), mean(PickOff_Steal_Exchange, na.rm = TRUE), PickOff_Steal_Exchange), Plate_Time_y0 = if_else(is.na(Plate_Time_y0), mean(Plate_Time_y0, na.rm = TRUE), Plate_Time_y0), Plate_Time_y17 = if_else(is.na(Plate_Time_y17), mean(Plate_Time_y17, na.rm = TRUE), Plate_Time_y17))
+Steals1$StartRunnerOnFirstId[is.na(Steals1$StartRunnerOnFirstId)] <- 0
+Steals1$StartRunnerOnSecondId[is.na(Steals1$StartRunnerOnSecondId)] <- 0
+Steals1$StartRunnerOnThirdId[is.na(Steals1$StartRunnerOnThirdId)] <- 0
+Steals1 <- select(Steals1, -c(PitcherId, CatcherId))
+Steals1 <- na.omit(Steals1)
+Steals1 <- filter(Steals1, Plate_Time_y0 < 2.3)
+Steals1 <- relocate(Steals1, RunnerId, .before = StartRunnerOnFirstId)
+Steals1 <- relocate(Steals1, c(Plate_Time_y0, Plate_Time_y17), .before = Advance)
+Steals1 <- filter(Steals1, Lead_Distance < 25.0)
+Steals1 <- filter(Steals1, Secondary_Lead_Distance < 45.0)
+```
+
+# I created the lolipop box plots below to gain a better understanding of the interquartile ranges amongst the numeric metrics and where the outliers are. After the removal of the outliers above you can see that there are still some remaining. However, these outliers are plausible as some runner’s secondary leads can be up to 45 feet if they attempted to steal a base but then retreated to first once the throw was on its way to second base. I deemed it prudent to keep the remaining outliers in the dataset for this reason.
+
+```{r}
+boxplot(Steals1[23:28], col = rainbow(14), main = "Box Plot of Counts", xlab = "Categories", ylab = "Scores")
+```
+
+# Below is a correlation plot depicting how well each metric is correlated to all others within the data set. The deeper the blue, the more positively correlated the metrics are and the deeper the red, the more negatively correlated. Advance and ThrownOut being highly correlated negatively makes sense as they are the opposing outcome attributes. Lead_Distance and Secondary_Lead_Distance are also positively correlated as the size of your primary lead will contrivbute to the size of your secondary lead.
+
+```{r}
+Steals_cor <- cor(Steals1[23:28])
+corrplot(Steals_cor, type = "upper", order = 'hclust', tl.col = "blue")
+```
+
+# Below is a scatterplot showing the relationship between Primary and Secondary leads. The greater your primary lead is usually the greater you secondary lead will be. This will help with stolen bases as it would lower the distance needed to run to obtain a stolen base.
+
+```{r}
+ggplot(Steals1, aes(x = Lead_Distance, y = Secondary_Lead_Distance)) +
+  geom_point(size = 1, color = "blue") +
+  geom_smooth(method = 'auto', level = 0.90, color = "darkred") +
+  labs(title = "Primary to Seconday Lead Relationship", subtitle = "2021 MLB Season", x = "Primary Lead Distance", y = "Secondary Lead Distance")
+```
+
+# I then trained the data on an 65:35 train to test ratio based on random samples to avoid any bias. Making the ratios split at random is a key factor as I wanted to remove as much bias as possible throughout my entire model creation. I wanted to produce the most fair and unbiased model possible that way I can ensure the highest level of accuracy.
+
+```{r}
+set.seed(49838)
+
+train <- sample(nrow(Steals1), 0.65*nrow(Steals1), replace = FALSE)
+
+TrainSet <- Steals1[train,]
+TestSet <- Steals1[-train,]
+```
+
+# I then created a base model using the ‘Advance’ variable as my dependent and using all others as my independents. This base model will allow me to gain an understanding of what metrics have the highest importance within the model. The importance metric shows how much of an influence the attribute has on the output. If the metric is too high then it could lead to domination thus resulting in an overfit. As you can see below, ‘ThrownOut’ had the most influence on the dependent variable by a wide margin. This is understandable as it is the opposing binary outcome to the dependent variable. The next greatest importance was the ‘PlayDetailType’ as this metric shows what the outcome of the play was. Both these attributes should be removed as it they are redundant to the outcome.
+
+```{r}
+baseModel <- randomForest(Advance ~., data = TrainSet, importance = TRUE, ntrees = 50)
+```
+
+```{r}
+baseImp <- importance(baseModel)
+baseImp <- as.data.frame(baseImp)
+ggplot(baseImp, aes(IncNodePurity, row.names(baseImp))) + 
+  geom_bar(stat = "identity", width = 0.1, fill = "black") + 
+  geom_point(shape = 21, size = 3, colour = "black", fill = "green", stroke = 2) + 
+  labs(title = "Stolen Base Importance", x = "Importance", y = "Variable")
+```
+
+# Checking the error chart, the base model worked well at reducing the chance of errors. The model did well at reducing errors at around the 50 tree mark. Therefore, I will create the new model with 50 trees, the same as the base model.
+
+```{r}
+plot(baseModel, col = "green", main = "Base Model Error Chart")
+```
+
+# I then created a new model on the same dependent variable but I removed the aforementioned ‘ThrownOut’ and ‘PlayDetailType’ columns. I also removed the 'PlayDescription' column as it also described what the outcome of the play was. The others however were deemed to be important to the desired outcome. I stated the number of nodes to 110 and the number of trees at 50 to obtain an Area Under the Curve (AUC) accuracy metric of ovewr 0.89 which can be found later in the assignment.
+
+# Notice for this model ‘Plate_Time_y0’ and ‘Secondary_Lead_Distance’ were the main contributors to steals. The less a player has to run and the more time the pitcher takes to get to the plate, the greater chance the player has at stealing a base.
+
+
+```{r}
+newModel <- randomForest(Advance ~ VisitingScore + HomeScore + Inning + InningTop + Strikes + Balls + StartRunnerOnFirstId + StartRunnerOnSecondId + StartRunnerOnThirdId + Secondary_Lead_Distance + Lead_Distance + RunnerId + Pop_Time + PlayGuid + Plate_Time_y0 + Plate_Time_y17 + PitchHand + PickOff_Steal_Exchange + OutsBefore + HomeTeam + AwayTeam + GameTime + BallparkId + BatHand, data = TrainSet, importance = TRUE,  maxnodes = 110, ntrees = 50)
+```
+
+```{r}
+newImp <- importance(newModel)
+newImp <- as.data.frame(newImp)
+ggplot(newImp, aes(IncNodePurity, row.names(newImp))) + 
+  geom_bar(stat = "identity", width = 0.1, fill = "black") + 
+  geom_point(shape = 21, size = 3, colour = "black", fill = "green", stroke = 2) + 
+  labs(title = " New Model Stolen Base Importance", x = "Importance", y = "Variable")
+```
+
+# The new model error chart showed that the model worked well at reducing the chance of errors, much like the base model did. This shows consistency in the model running well.
+
+```{r}
+plot(newModel, col = "green", main = "New Model Error Chart")
+```
+
+# I used the ‘response’ method to predict the probability of each outcome being a stolen base. I wanted a numerical result for each observation rather than a value being assigned by using ‘class’. I then bound the scores onto their respective sets from which they were predicted. and changed the predictive column names to match each other. This allowed me to bind both the Train and Test sets back together to create one full data set and see all the predictions within one data set.
+
+# I created a Receiver Operator Characteristic (ROC) Curve and calculated the AUC below to show how well the model performed. Judging by the findings, the model performed excellently as the AUC was tabulated at 0.902 giving a 90% model accuracy rating. The ROC had an almost perfect curve to the top left corner showing that the model’s supervised learning worked well.
+
+
+```{r}
+StealsTrain_pred <- predict(newModel, TrainSet, type = "response")
+StealsTest_pred <- predict(newModel, TestSet, type = "response")
+```
+
+
+```{r}
+StealsTrain <- cbind(TrainSet, StealsTrain_pred)
+StealsTest <- cbind(TestSet, StealsTest_pred)
+```
+
+
+```{r}
+names(StealsTrain)[names(StealsTrain) == "StealsTrain_pred"] <- "StealsPred"
+names(StealsTest)[names(StealsTest) == "StealsTest_pred"] <- "StealsPred"
+```
+
+```{r}
+roc_test <- roc(ifelse(StealsTest$Advance == "1", "1", "0"), as.numeric(StealsTest$StealsPred))
+roc_train <- roc(ifelse(StealsTrain$Advance == "1", "1", "0"), as.numeric(StealsTrain$StealsPred))
+plot(roc_test, col = "blue", main = "Called Strikes ROC Graph")
+lines(roc_train, col = "green")
+```
+
+
+```{r}
+StealsFull <- rbind(StealsTest, StealsTrain)
+```
+
+```{r}
+auc(StealsFull$Advance, StealsFull$StealsPred)
+```
+
+# Below are the results from the model prediction. 
+
+```{r}
+Advanced <- select(StealsFull, -c(PlayGuid, Inning, InningTop, Balls, Strikes, OutsBefore, PitchHand, BatHand, BallparkId))
+Advanced <- as.data.frame(Advanced[order(-Advanced$StealsPred),])
+Advanced
+```
+
+# Question 2
+
+```{r}
+ggplot(Advanced, aes(x = StealsPred, y = Lead_Distance)) +
+  geom_point(color = 'Red', size = 1) +
+  labs(title = "Primary Lead to Steals Relationship", subtitle = "2021 MLB Season", x = "Stolen Base Prediction", y = "Primary Lead Distance")
+  
+ggplot(Advanced, aes(x = StealsPred, y = Secondary_Lead_Distance)) + 
+  geom_point(color = 'blue', size = 1)+
+  labs(title = "Secondary Lead to Steals Relationship", subtitle = "2021 MLB Season", x = "Stolen Base Prediction", y = "Secondary Lead Distance")
+
+ggplot(Advanced, aes(x = StealsPred, y = Pop_Time)) + 
+  geom_point(colour = 'green', size = 1) +
+  labs(title = "Pop Time to Steals Relationship", subtitle = "2021 MLB Season", x = "Stolen Base Prediction", y = "Pop Time")
+```
+
